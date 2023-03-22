@@ -1,0 +1,4 @@
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"num2"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"num1"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"num3"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"attnr"}}
