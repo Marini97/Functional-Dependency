@@ -1,4 +1,8 @@
-{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"num2"}}
-{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"num1"}}
-{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"num3"}}
-{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"subidr"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"attnr"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Name"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"Address"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Name"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"Zip-Code"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Name"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"City"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Address"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"Name"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Address"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"Zip-Code"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Address"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"City"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"Zip-Code"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"City"}}
+{"type":"FunctionalDependency","determinant":{"columnIdentifiers":[{"tableIdentifier":"data.csv","columnIdentifier":"City"}]},"dependant":{"tableIdentifier":"data.csv","columnIdentifier":"Zip-Code"}}
