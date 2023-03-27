@@ -38,19 +38,8 @@ def read_output(dataset, results, fd):
 
     if len(results) == 0:
         fd = False
-        st.write("The **HyFD Algorithm** didn't find any **Functional Dependencies** in this dataset.")
         
     return results, fd
-    
-        # create a dataframe with all FDs
-    rows = pd.DataFrame(columns=['Determinants', 'Dependant', 'Score'])
-    for result in results:
-        determinants = ", ".join(map(str,result['determinants']))
-        dependant = result['dependant']
-        score = result['score']
-        row = pd.DataFrame({'Determinants': [determinants], 'Dependant': [dependant], 'Score': [score]})
-        rows = pd.concat([rows, row], ignore_index=True)
-    return rows
 
 # get all FDs and group them by Determinants
 @st.cache_data
@@ -65,9 +54,16 @@ def get_fds(results, df_num):
         
     # group the FDs by Determinants and concatenate the Dependant attributes
     rows = rows.groupby('Determinants').agg({'Dependant': ', '.join, 'Score': 'mean'}).reset_index()
+    # group the FDs by subsets of Determinants and concatenate the Dependant attributes
+    for row in rows.itertuples():
+        for row2 in rows.itertuples():
+            if row.Index != row2.Index and set(row2.Determinants.split(", ")).issubset(set(row.Determinants.split(", "))):
+                rows.loc[row.Index, 'Dependant'] = rows.loc[row.Index, 'Dependant']+", "+row2.Dependant
+                rows = rows.drop(row2.Index)
+    
     # if the union of Determinants and Dependant contains all attributes, then the FD is filtered out
     for row in rows.itertuples():
-        if len(row.Determinants.split(", "))+len(row.Dependant.split(", ")) > df_num:
+        if len(row.Determinants.split(", "))+len(row.Dependant.split(", ")) >= df_num:
             rows = rows.drop(row.Index)
     return rows
 
@@ -120,26 +116,40 @@ results = []
 fd = True
 results, fd = read_output(dataset, results, fd)
 
+df_num = len(df.columns)
+rows = get_fds(results, df_num)    
+
 # write the results to the streamlit app 
-if fd:
+if fd and rows.shape[0] > 0:
     st.header("Functional Dependencies")
-    st.write("In the following dropdown menu you can see all the **Functional Dependencies** found in the dataset. " 
+    st.write("In the following dropdown menu you can see all the **Functional Dependencies**  in the dataset. " 
              +"The **Functional Dependencies** are grouped by **Determinants** and sorted by their unique number of rows. "
-             +"An FD is filtered out if the union of Determinants and Dependants **contains all the attributes**.")
+             +"A FD is filtered out if the union of Determinants and Dependants **contains all the attributes**.")
     
-    df_num = len(df.columns)
-    st.write("The dataset has **"+str(df_num)+" columns**. The HyFD algorithm "
-             +"Found "+str(len(results))+" **Functional Dependencies**")
-    rows = get_fds(results, df_num)    
+    st.write("The dataset has **"+str(df_num)+" attributes**. The HyFD algorithm "
+             +"has  "+str(len(results))+" **Functional Dependencies**.")
+    
     # sort the FDs by score
     rows = rows.sort_values(by=['Score'], ascending=False)
-    selected = st.selectbox("Choose a FD to see his table normalized.  (**Determinants -> Dependants: Score**)",rows['Determinants']+" -> "+rows['Dependant']+": "+rows['Score'].astype(str))
+    selected = st.selectbox("Choose a FD to see the dataset normalized.  (**Determinants -> Dependants: Score**)",rows['Determinants']+" -> "+rows['Dependant']+": "+rows['Score'].astype(str))
+    # get the Determinants and Dependants attributes from the selected FD
+    dependants = selected.split(" -> ")[1].split(", ")
+    dependants[-1] = dependants[-1].split(":")[0]
     # get all the attributes of the selected FD based on the dataframe columns
-    attributes = []
+    attr1 = []
+    output1 = df.copy()
     for attr in df.columns:
         if attr in selected:
-            attributes.append(attr)
+            attr1.append(attr)
+        # remove the Dependants attributes from the dataframe
+        if attr in dependants:
+            output1 = output1.drop(attr, axis=1)
     
-    output = df[attributes]
-    output = output.drop_duplicates()
-    st.dataframe(output, use_container_width=True)
+    output2 = df[attr1]
+    output2 = output2.drop_duplicates()
+    col1, col2 = st.columns(2)
+    col1.dataframe(output1, use_container_width=True)
+    col2.dataframe(output2, use_container_width=True)
+    
+else:
+    st.write("The **HyFD Algorithm** didn't find any **Functional Dependencies** in this dataset.")
