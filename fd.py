@@ -17,7 +17,8 @@ def get_data(file):
 # if it has been changed, then we need to read the output file again
 # if it hasn't been changed, then we can use the cached results
 @st.cache_data
-def read_output(dataset, results, fd):
+def read_output(dataset):
+    fd = True
     try:
         with jsonlines.open('results/data_fds') as reader:
             df_num = len(df.columns)
@@ -74,9 +75,23 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
-# title of the app
-st.title("Functional Dependency App\n\n")
 
+# CSS to remove links
+st.markdown("""
+    <style>
+    .css-15zrgzn {display: none}
+    .css-10pw50 {display: none}
+    .css-16a7pdm {display: none}
+    </style>
+    """, unsafe_allow_html=True)
+    
+# title of the app
+col1, col2 = st.columns([2, 0.7])
+with col1:
+    st.title("Functional Dependency App")
+with col2:
+    st.image(icon, width=80)
+    
 with st.sidebar:
     st.title("Select a Dataset")
     # select a dataset
@@ -113,28 +128,29 @@ subprocess.run(["java", "-cp", "jars/*", "de.metanome.cli.App", "--algorithm", "
                 "--header", "-o", "file:data"])
 
 results = []
-fd = True
-results, fd = read_output(dataset, results, fd)
+results, fd = read_output(dataset)
 
 df_num = len(df.columns)
 rows = get_fds(results, df_num)    
 
+st.header("Functional Dependencies")
 # write the results to the streamlit app 
 if fd and rows.shape[0] > 0:
-    st.header("Functional Dependencies")
     st.write("In the following dropdown menu you can see all the **Functional Dependencies**  in the dataset. " 
              +"The **Functional Dependencies** are grouped by **Determinants** and sorted by their unique number of rows. "
              +"A FD is filtered out if the union of Determinants and Dependants **contains all the attributes**.")
     
-    st.write("The dataset has **"+str(df_num)+" attributes**. The HyFD algorithm "
-             +"has  "+str(len(results))+" **Functional Dependencies**.")
+    st.success("The dataset has **"+str(df_num)+" attributes** and **"+str(df.shape[0])+" rows**. " 
+             +"The HyFD Algorithm found "+str(len(results))+" **Functional Dependencies**.")
     
     # sort the FDs by score
     rows = rows.sort_values(by=['Score'], ascending=False)
     selected = st.selectbox("Choose a FD to see the dataset normalized.  (**Determinants -> Dependants: Score**)",rows['Determinants']+" -> "+rows['Dependant']+": "+rows['Score'].astype(str))
+    
     # get the Determinants and Dependants attributes from the selected FD
     dependants = selected.split(" -> ")[1].split(", ")
     dependants[-1] = dependants[-1].split(":")[0]
+    
     # get all the attributes of the selected FD based on the dataframe columns
     attr1 = []
     output1 = df.copy()
@@ -148,8 +164,10 @@ if fd and rows.shape[0] > 0:
     output2 = df[attr1]
     output2 = output2.drop_duplicates()
     col1, col2 = st.columns(2)
+    col1.write("Table without the FD's Dependants attributes:")
     col1.dataframe(output1, use_container_width=True)
+    col2.write("Table for the selected FD:")
     col2.dataframe(output2, use_container_width=True)
     
 else:
-    st.write("The **HyFD Algorithm** didn't find any **Functional Dependencies** in this dataset.")
+    st.warning("In the selected dataset, the **HyFD Algorithm** did **NOT** find any **FD** or they got filtered out.")
