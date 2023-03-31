@@ -22,21 +22,20 @@ def get_data(file: str, header: bool=True) -> pd.DataFrame:
             A pandas dataframe with the data read from the file.
     """
     if header:
-        df = pd.read_csv(file)
+        return pd.read_csv(file)
     else:
         df = pd.read_csv(file, header=None)
-    return df
+        df.columns = [f"Column {i}" for i in range(df.shape[1])]
+        return df
 
-# the dataset parameter is used to check if the dataset has been changed
-# if it has been changed, then we need to read the output file again
-# if it hasn't been changed, then we can use the cached results
+
 @st.cache_data
-def read_json(dataset: str, df_cols: int, results: pd.DataFrame) -> pd.DataFrame:
+def read_json(df: pd.DataFrame, df_cols: int, results: pd.DataFrame) -> pd.DataFrame:
     """Read the output file from Metanome and return a dataframe with the results.
 
     Args:
-        dataset : str
-            The name of the dataset.
+        df : pd.DataFrame
+            The dataframe with the data.
         df_cols : int
             The number of columns in the dataset.
         results : pd.DataFrame
@@ -50,13 +49,13 @@ def read_json(dataset: str, df_cols: int, results: pd.DataFrame) -> pd.DataFrame
         # read the output file from Metanome
         with jsonlines.open('results/data_fds') as lines:
             for line in lines:
-                
+
                 # get the determinants and dependant attributes
                 determinants = line['determinant']['columnIdentifiers']
                 for i in range(len(determinants)):
                     determinants[i] = determinants[i]['columnIdentifier']
                     
-                dependant = line['dependant']['columnIdentifier']
+                dependant = line['dependant']['columnIdentifier']   
                 
                 # if the union of Determinants and Dependant contains all attributes, then the FD is filtered out
                 if len(determinants)+1 < df_cols:
@@ -65,9 +64,9 @@ def read_json(dataset: str, df_cols: int, results: pd.DataFrame) -> pd.DataFrame
                     results.loc[len(results)] = row
                     
     except Exception as exception:
-        pass
+        print(exception)
     if len(results) == 0:
-        return []
+        return pd.DataFrame(columns=['Determinants', 'Dependant', 'Score'])
     return results
 
 
@@ -169,7 +168,7 @@ with st.sidebar:
     if uploaded_file is not None:
         try:
             # select if header is present in the dataset
-            header = st.checkbox("Does the dataset have a header?", value=True)
+            header = st.checkbox("Does the dataset have a header?", value=False)
             df = get_data(uploaded_file, header)
             dataset = uploaded_file.name
         except(pd.errors.EmptyDataError):
@@ -181,7 +180,7 @@ if df is not None:
     # remove all files from the results folder
     subprocess.run(["rm", "-r", "results/*"])
     # write the dataset to a csv file
-    df.to_csv("results/data.csv", index=False, header=header)
+    df.to_csv("results/data.csv", index=False)
     st.header("Selected Dataset")
     st.dataframe(df, use_container_width=True)
     
@@ -194,7 +193,7 @@ subprocess.run(["java", "-cp", "jars/*", "de.metanome.cli.App", "--algorithm", "
 df_cols = len(df.columns)
 df_rows = df.shape[0]
 results = pd.DataFrame(columns=['Determinants', 'Dependant', 'Score'])
-results = read_json(dataset, df_cols, results)
+results = read_json(df, df_cols, results)
 rows = get_fds(results, df_cols)
 
 st.header("Functional Dependencies")
@@ -219,7 +218,7 @@ if rows.shape[0] > 0:
     attr1 = []
     output1 = df.copy()
     for attr in df.columns:
-        if attr in selected:
+        if str(attr) in selected:
             attr1.append(attr)
         # remove the Dependants attributes from the dataframe
         if attr in dependants:
