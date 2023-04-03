@@ -60,7 +60,7 @@ def read_json(df: pd.DataFrame, df_cols: int, results: pd.DataFrame) -> pd.DataF
                 # if the union of Determinants and Dependant contains all attributes, then the FD is filtered out
                 if len(determinants)+1 < df_cols:
                     score = df[determinants+[dependant]].drop_duplicates().shape[0]
-                    row = {'Determinants': [determinants], 'Dependant': [dependant], 'Score': [score]}
+                    row = {'Determinants': determinants, 'Dependant': dependant, 'Score': score}
                     results.loc[len(results)] = row
                     
     except Exception as exception:
@@ -84,28 +84,15 @@ def get_fds(results: pd.DataFrame, df_cols: int) -> pd.DataFrame:
         rows : pd.DataFrame
             A dataframe with Determinants, Dependant and Score as attributes and FDs as rows.
     """
+    # Convert the determinants to a string
+    results['Determinants'] = [', '.join(map(str, l)) for l in results['Determinants']]
+    
     # Create a new dataframe with the columns 'Determinants', 'Dependant' and 'Score'
     rows = pd.DataFrame(columns=['Determinants', 'Dependant', 'Score'])
-
-    # Loop through all results
-    for result in results.itertuples():
-        determinants = ""
-        
-        for r in result.Determinants[0]:
-            determinants = determinants + str(r) + ", "
-        determinants = determinants[:-2]
-        
-        dependant = str(result.Dependant[0])
-        score = str(result.Score[0])
-        
-        # Create a new row with the data of this result
-        row = {'Determinants': determinants, 'Dependant': dependant, 'Score': score}
-        
-        # Append the row to the dataframe
-        rows.loc[len(rows)] = row
-
+    rows = results.copy()
+    
     # Group the dataframe by the determinants
-    rows = rows.groupby('Determinants').agg({'Dependant': ', '.join, 'Score': 'mean'}).reset_index()
+    rows = rows.groupby('Determinants').agg({'Dependant': ', '.join, 'Score': 'max'}).reset_index()
 
     # Loop through all rows of the dataframe
     for row in rows.itertuples():
@@ -116,9 +103,6 @@ def get_fds(results: pd.DataFrame, df_cols: int) -> pd.DataFrame:
                 # Add the dependants of row2 to the dependants of row
                 rows.loc[row.Index, 'Dependant'] = rows.loc[row.Index, 'Dependant']+", "+row2.Dependant
                 
-                # Remove row2 from the dataframe
-                rows = rows.drop(row2.Index)
-            
     # Remove all rows with more than df_cols columns
     for row in rows.itertuples():
         if len(row.Determinants.split(", "))+len(row.Dependant.split(", ")) >= df_cols:
@@ -205,7 +189,7 @@ if rows.shape[0] > 0:
     st.success("The dataset has **"+str(df_cols)+" attributes** and **"+str(df_rows)+" rows**. " 
              +"The HyFD Algorithm has found "+str(len(results))+" **Functional Dependencies**.")
     
-    st.write("An FD is filtered out if the union of Determinants and Dependants **contains all the attributes**.")
+    st.write("An FD is filtered out if the union of Determinants and Dependants **contains ALL the attributes**.")
     # sort the FDs by score
     rows = rows.sort_values(by=['Score'], ascending=False)
     selected = st.selectbox("Choose a FD to see the dataset normalized.  (**Determinants -> Dependants: Score**)",rows['Determinants']+" -> "+rows['Dependant']+": "+rows['Score'].astype(str))
@@ -224,7 +208,7 @@ if rows.shape[0] > 0:
         if attr in dependants:
             output1 = output1.drop(attr, axis=1)
     
-    output2 = df[attr1]
+    output2 = df[attr1].copy()
     output2 = output2.drop_duplicates()
     col1, col2 = st.columns(2)
     
@@ -235,3 +219,4 @@ if rows.shape[0] > 0:
     
 else:
     st.warning("In the selected dataset, the **HyFD Algorithm** did **NOT** find any **FD** or they got filtered out.")
+    st.write("An FD is filtered out if the union of Determinants and Dependants **contains ALL the attributes**.")
