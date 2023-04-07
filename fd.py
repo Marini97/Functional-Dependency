@@ -88,7 +88,7 @@ def get_fds(results: pd.DataFrame, df_cols: int) -> pd.DataFrame:
     results['Determinants'] = [', '.join(map(str, l)) for l in results['Determinants']]
     
     # Create a new dataframe with the columns 'Determinants', 'Dependant' and 'Score'
-    rows = pd.DataFrame(columns=['Determinants', 'Dependant', 'Score'])
+    #rows = pd.DataFrame(columns=['Determinants', 'Dependant', 'Score'])
     rows = results.copy()
     
     # Group the dataframe by the determinants
@@ -187,7 +187,7 @@ if rows.shape[0] > 0:
              +"The **Functional Dependencies** are grouped by **Determinants** and sorted by their unique number of rows. ")
     
     st.success("The dataset has **"+str(df_cols)+" attributes** and **"+str(df_rows)+" rows**. " 
-             +"The HyFD Algorithm has found "+str(len(results))+" **Functional Dependencies**.")
+             +"The HyFD Algorithm has found **"+str(len(results))+" Functional Dependencies**.")
     
     st.write("An FD is filtered out if the union of Determinants and Dependants **contains ALL the attributes**.")
     # sort the FDs by score
